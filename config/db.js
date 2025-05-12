@@ -1,8 +1,9 @@
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('hopeconnect', 'postgres', 'yourpassword', {
+const sequelize = new Sequelize('hopeconnect', 'root', '', {
   host: 'localhost',
-  dialect: 'postgres'
+  dialect: 'mysql'
 });
 
 module.exports = sequelize;
+
