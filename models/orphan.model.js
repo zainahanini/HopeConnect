@@ -1,14 +1,15 @@
 const { DataTypes } = require('sequelize');
 const db = require('../config/db');
-const User = require('./user.model');
 
 const Orphan = db.define('Orphan', {
-  name: DataTypes.STRING,
-  age: DataTypes.INTEGER,
-  healthStatus: DataTypes.STRING,
-  educationStatus: DataTypes.STRING
+  full_name: { type: DataTypes.STRING(100), allowNull: false },
+  age: { type: DataTypes.INTEGER, allowNull: false },
+  education_status: { type: DataTypes.TEXT },
+  health_condition: { type: DataTypes.TEXT },
+  orphanage_id: { type: DataTypes.INTEGER }
+}, {
+  timestamps: false,
+  tableName: 'orphans'
 });
-
-Orphan.belongsTo(User, { as: 'sponsor', foreignKey: 'sponsorId' });
 
 module.exports = Orphan;
