@@ -11,6 +11,7 @@ const usersRouter = require('./routes/users');
 const orphanRouter = require('./routes/orphan.routes');
 const donationRouter = require('./routes/donation.routes');
 const newsRouter = require('./routes/news.routes');
+const sponsorshipRoutes = require('./routes/sponsorship.routes');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/users', usersRouter);
 app.use('/orphans', orphanRouter);
 app.use('/donations', donationRouter);
 app.use('/news', newsRouter);
+app.use('/sponsorships', sponsorshipRoutes);
 
 app.use((req, res, next) => {
   next(createError(404, 'Not Found'));
@@ -53,3 +55,5 @@ db.sync()
   });
 
 module.exports = app;
+
+
