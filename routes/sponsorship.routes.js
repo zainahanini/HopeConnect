@@ -5,4 +5,4 @@ const controller = require('../controllers/sponsorship.controller');
 router.post('/', controller.createSponsorship);
 router.get('/', controller.getAllSponsorships);
 
-module.exports = router;
+module.exports = router; 
