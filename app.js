@@ -6,6 +6,7 @@ const logger = require('morgan');
 
 
 const db = require('./config/db');
+require('dotenv').config();
 
 
 const indexRouter = require('./routes/index');

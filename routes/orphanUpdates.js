@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const sendEmail = require('../services/sendEmail');
-const db = require('../models'); 
+const sequelize = require('../config/db');  
+const OrphanUpdate = require('../models/orphan_update')(sequelize, require('sequelize').DataTypes);
 
 router.post('/update', async (req, res) => {
   const { orphanId, updateType, description, sponsorEmail } = req.body;
 
   try {
-    await db.orphan_updates.create({
+    await OrphanUpdate.create({
       orphan_id: orphanId,
       update_type: updateType,
       description: description,
