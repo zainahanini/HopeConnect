@@ -1,64 +1,30 @@
 const express = require('express');
 const router = express.Router();
-const sgMail = require('@sendgrid/mail');
-require('dotenv').config();
+const sendEmail = require('../services/sendEmail');
+const db = require('../models'); 
 
-const { OrphanUpdate, Orphan, Sponsor } = require('../models');
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-async function sendOrphanUpdateEmail(to, orphanName, updateType, description, fileUrl = null) {
-  const msg = {
-    to,
-    from: 'zainahanini03@gmail.com', 
-    subject: `${updateType.toUpperCase()} A new update on ${orphanName}`,
-    html: `
-      <h2>${updateType.charAt(0).toUpperCase() + updateType.slice(1)} Update for ${orphanName}</h2>
-      <p>${description}</p>
-      ${fileUrl ? `<p><a href="${fileUrl}" target="_blank">View Attachment</a></p>` : ''}
-    `
-  };
+router.post('/update', async (req, res) => {
+  const { orphanId, updateType, description, sponsorEmail } = req.body;
 
   try {
-    await sgMail.send(msg);
-    console.log(`Email sent to ${to}`);
-  } catch (error) {
-    console.error('SendGrid Error:', error.response?.body || error.message);
-  }
-}
-
-router.post('/:orphanId/update', async (req, res) => {
-  const { orphanId } = req.params;
-  const { update_type, description, file_url } = req.body;
-
-  try {
-    const update = await OrphanUpdate.create({
+    await db.orphan_updates.create({
       orphan_id: orphanId,
-      update_type,
-      description,
-      file_url
+      update_type: updateType,
+      description: description,
+      file_url: '', 
     });
 
-    const orphan = await Orphan.findByPk(orphanId, {
-      include: [{ model: Sponsor }]
-    });
+    const subject = `New update from #${orphanId}`;
+    const html = `
+      <h2>New ${updateType} update</h2>
+      <p>${description}</p>
+    `;
 
-    if (!orphan || !orphan.Sponsor) {
-      return res.status(404).json({ message: 'Orphan or sponsor not found' });
-    }
+    await sendEmail(sponsorEmail, subject, html);
 
-    await sendOrphanUpdateEmail(
-      orphan.Sponsor.email,
-      orphan.name,
-      update_type,
-      description,
-      file_url
-    );
-
-    res.status(201).json({ message: 'Update saved and email sent.' });
-
-  } catch (error) {
-    console.error('Server Error:', error);
+    res.status(200).json({ message: 'Update saved and email sent.' });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Something went wrong.' });
   }
 });

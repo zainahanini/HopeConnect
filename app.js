@@ -4,7 +4,9 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
+
 const db = require('./config/db');
+
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/user.routes');
@@ -12,6 +14,7 @@ const orphanRouter = require('./routes/orphan.routes');
 const donationRouter = require('./routes/donation.routes');
 const newsRouter = require('./routes/news.routes');
 const sponsorshipRoutes = require('./routes/sponsorship.routes');
+const orphanUpdatesRouter = require('./routes/orphanUpdates'); 
 
 const app = express();
 
@@ -27,6 +30,11 @@ app.use('/orphans', orphanRouter);
 app.use('/donations', donationRouter);
 app.use('/news', newsRouter);
 app.use('/sponsorships', sponsorshipRoutes);
+app.use('/api/orphan-updates', orphanUpdatesRouter);
+
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 
 app.use((req, res, next) => {
   next(createError(404, 'Not Found'));
@@ -55,5 +63,6 @@ db.sync()
   });
 
 module.exports = app;
+
 
 
