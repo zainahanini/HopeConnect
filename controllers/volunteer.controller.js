@@ -1,4 +1,4 @@
-const Volunteer = require('../../../Desktop/4th year 2nd semester/advanced/hopeconnect-nodejs-pg/models/volunteer.model');
+const Volunteer = require('HopeConnect\models\volunteer.model.js');
 
 exports.registerVolunteer = async (req, res) => {
   const volunteer = await Volunteer.create(req.body);

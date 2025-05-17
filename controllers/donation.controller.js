@@ -1,4 +1,4 @@
-const Donation = require('../../../Desktop/4th year 2nd semester/advanced/hopeconnect-nodejs-pg/models/donation.model');
+const Donation = require('../models/donation.model.js');
 
 exports.createDonation = async (req, res) => {
   const donation = await Donation.create(req.body);
