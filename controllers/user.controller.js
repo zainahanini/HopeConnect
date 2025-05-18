@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user.model');
 
 class UserController {
@@ -37,7 +38,13 @@ class UserController {
         return res.status(401).json({ message: 'Invalid credentials, check again' });
       }
 
-      res.json({ token: 'mock-token', userId: user.id, role: user.role });
+      const token = jwt.sign(
+        { id: user.id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '1d' } 
+      );
+
+      res.json({ token, userId: user.id, role: user.role });
     } catch (err) {
       console.error('Login error:', err);
       res.status(500).json({ error: 'Login failed' });
