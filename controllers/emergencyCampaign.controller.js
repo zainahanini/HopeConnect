@@ -1,5 +1,6 @@
 const Campaign = require('../models/emergency_campaign');
 const Contribution = require('../models/campaign_contribution');
+console.log(Contribution);
 const sendEmail = require('../services/sendEmail'); 
 
 class EmergencyCampaignController {
