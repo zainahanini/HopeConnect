@@ -18,6 +18,7 @@ const sponsorshipRoutes = require('./routes/sponsorship.routes');
 const orphanUpdatesRouter = require('./routes/orphanUpdates'); 
 const donorRoutes = require('./routes/donor');
 const emergencyCampaignRoutes = require('./routes/emergencyCampaign.routes');
+const partnerRoutes = require('./routes/partner.routes');
 
 const app = express();
 
@@ -36,6 +37,8 @@ app.use('/sponsorships', sponsorshipRoutes);
 app.use('/api/orphan-updates', orphanUpdatesRouter);
 app.use('/donor', donorRoutes);
 app.use('/emergency-campaigns', emergencyCampaignRoutes);
+app.use('/partners', partnerRoutes);
+
 
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
