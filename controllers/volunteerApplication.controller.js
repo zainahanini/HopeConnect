@@ -5,7 +5,6 @@ exports.createApplication = async (req, res) => {
     const { requestId } = req.body;
     const volunteerId = req.user.id;
 
-    // Check if application already exists
     const existing = await VolunteerApplication.findOne({
       where: { volunteerId, requestId }
     });

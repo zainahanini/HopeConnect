@@ -9,7 +9,7 @@ exports.createDonation = async (req, res) => {
     const userId = req.user.id;
     const { amount, donation_type, category, payment_method_id } = req.body;
 
-    // Validate donation_type and category
+  
     const validTypes = ['money', 'clothes', 'food', 'education_materials'];
     const validCategories = ['general_fund', 'education_support', 'medical_aid', 'emergency_support'];
 
@@ -17,14 +17,14 @@ exports.createDonation = async (req, res) => {
       return res.status(400).json({ message: 'Invalid donation type or category' });
     }
 
-    // If money donation, process Stripe payment
+  
     if (donation_type === 'money') {
       if (!payment_method_id) {
         return res.status(400).json({ message: "Payment method ID is required for money donations" });
       }
 
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100), // convert to cents
+        amount: Math.round(amount * 100), 
         currency: 'usd',
         payment_method: payment_method_id,
         confirm: true,
@@ -39,15 +39,14 @@ exports.createDonation = async (req, res) => {
       }
     }
 
-    // Create donation record
+   
     const donation = await Donation.create({
       user_id: userId,
       amount,
       donation_type,
-      category,
+      category
     });
 
-    // Fetch user email
     const user = await User.findByPk(userId);
 
     if (user?.email) {
@@ -71,7 +70,6 @@ exports.createDonation = async (req, res) => {
 };
 
 
-// Get user donations
 exports.getUserDonations = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -82,20 +80,42 @@ exports.getUserDonations = async (req, res) => {
   }
 };
 
-// Update impact message (admin only in real use)
+
 exports.updateImpactMessage = async (req, res) => {
   try {
     const { donationId } = req.params;
     const { impact_message } = req.body;
 
+    if (impact_message === undefined || impact_message === null) {
+      return res.status(400).json({ message: 'Impact message is required' });
+    }
+
     const donation = await Donation.findByPk(donationId);
     if (!donation) return res.status(404).json({ message: 'Donation not found' });
 
+    // Update the impact message
     donation.impact_message = impact_message;
     await donation.save();
 
-    res.json({ message: 'Impact message updated', donation });
+    // Fetch the user associated with the donation
+    const user = await User.findByPk(donation.user_id);
+
+    if (user?.email) {
+      const htmlContent = `
+        <h2>Donation Impact Update</h2>
+        <p>Dear ${user.full_name || 'Donor'},</p>
+        <p>Thank you once again for your generous donation.</p>
+        <p><strong>Impact Message:</strong> ${impact_message}</p>
+        <p>Your support is making a difference!</p>
+      `;
+
+      await sendEmail(user.email, 'Your Donation Impact Update', htmlContent);
+    }
+
+    res.json({ message: 'Impact message updated and email sent', donation });
   } catch (err) {
+    console.error('Update impact message error:', err);
     res.status(500).json({ message: 'Failed to update donation', error: err.message });
   }
 };
+

@@ -31,7 +31,7 @@ db.Service.belongsToMany(db.Volunteer, {
 });
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
-    db[modelName].associate(db); // Pass all models so associations can be made
+    db[modelName].associate(db); 
   }
 });
 

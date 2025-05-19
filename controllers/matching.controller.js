@@ -14,18 +14,18 @@ exports.getMatchesForRequest = async (req, res) => {
 
     const requestType = request.requestType;
 
-    // Find service id by name
+
     const service = await Service.findOne({ where: { name: requestType } });
     if (!service) {
       return res.status(404).json({ message: 'Service type not found' });
     }
 
-    // Get volunteers who have that service
+
     const volunteers = await Volunteer.findAll({
       include: [{
         model: Service,
         where: { id: service.id },
-        through: { attributes: [] } // exclude join table attributes
+        through: { attributes: [] } 
       }]
     });
 

@@ -4,11 +4,10 @@ const Orphanage = require('../models/orphanage.model');
 const OrphanageReview = require('../models/orphanage_review.model');
 const  isAdmin  = require('../middleware/isAdmin');
 
-// Get all orphanages (optionally only verified)
 router.get('/', async (req, res) => {
   try {
     const orphanages = await Orphanage.findAll({
-      where: { verified: true } // remove this if you want all
+      where: { verified: true } 
     });
     res.json(orphanages);
   } catch (err) {
@@ -16,8 +15,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Admin route: verify orphanage
-router.patch('/:id/verify', isAdmin, async (req, res) => {
+const authenticate = require('../middleware/authenticateToken'); 
+
+router.patch('/:id/verify', authenticate, isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const orphanage = await Orphanage.findByPk(id);
@@ -32,7 +32,6 @@ router.patch('/:id/verify', isAdmin, async (req, res) => {
   }
 });
 
-// Add review to an orphanage
 router.post('/:id/reviews', async (req, res) => {
   try {
     const { id } = req.params;
@@ -51,7 +50,7 @@ router.post('/:id/reviews', async (req, res) => {
   }
 });
 
-// Get reviews of an orphanage
+
 router.get('/:id/reviews', async (req, res) => {
   try {
     const { id } = req.params;

@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
@@ -19,10 +20,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use((req, res, next) => {
-  req.user = { id: 1 };
-  next();
-});
 
 
 app.use('/', require('./routes/index'));
