@@ -19,6 +19,7 @@ const orphanUpdatesRouter = require('./routes/orphanUpdates');
 const donorRoutes = require('./routes/donor');
 const emergencyCampaignRoutes = require('./routes/emergencyCampaign.routes');
 const partnerRoutes = require('./routes/partner.routes');
+const messageRouter = require('./routes/message.routes'); 
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api/orphan-updates', orphanUpdatesRouter);
 app.use('/donor', donorRoutes);
 app.use('/emergency-campaigns', emergencyCampaignRoutes);
 app.use('/partners', partnerRoutes);
+app.use('/messages', messageRouter);
 
 
 const sgMail = require('@sendgrid/mail');
