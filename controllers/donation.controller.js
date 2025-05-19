@@ -1,15 +1,16 @@
-
 const Donation = require('../models/donation.model');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const User = require('../models/user.model');
+const Project = require('../models/project.model');
 const sendEmail = require('../services/sendEmail');
+
+const TRANSACTION_FEE_PERCENTAGE = 2.9;
 
 exports.createDonation = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { amount, donation_type, category, payment_method_id } = req.body;
+    const { amount, donation_type, category, payment_method_id, project_id } = req.body;
 
-  
     const validTypes = ['money', 'clothes', 'food', 'education_materials'];
     const validCategories = ['general_fund', 'education_support', 'medical_aid', 'emergency_support'];
 
@@ -17,14 +18,28 @@ exports.createDonation = async (req, res) => {
       return res.status(400).json({ message: 'Invalid donation type or category' });
     }
 
-  
+    let project = null;
+    if (project_id) {
+      project = await Project.findByPk(project_id);
+      if (!project) {
+        return res.status(400).json({ message: 'Invalid project ID' });
+      }
+    }
+
+    let fee = 0;
+    let total = amount;
+
+
     if (donation_type === 'money') {
       if (!payment_method_id) {
         return res.status(400).json({ message: "Payment method ID is required for money donations" });
       }
 
+      fee = parseFloat((amount * TRANSACTION_FEE_PERCENTAGE / 100).toFixed(2));
+      total = parseFloat((amount + fee).toFixed(2));
+
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100), 
+        amount: Math.round(total * 100),
         currency: 'usd',
         payment_method: payment_method_id,
         confirm: true,
@@ -39,12 +54,14 @@ exports.createDonation = async (req, res) => {
       }
     }
 
-   
     const donation = await Donation.create({
       user_id: userId,
       amount,
       donation_type,
-      category
+      category,
+      fee,
+      total,
+      project_id
     });
 
     const user = await User.findByPk(userId);
@@ -52,9 +69,12 @@ exports.createDonation = async (req, res) => {
     if (user?.email) {
       const htmlContent = `
         <h2>Thank you for your donation!</h2>
-        <p><strong>Amount:</strong> $${amount}</p>
-        <p><strong>Category:</strong> ${category}</p>
+        <p><strong>Amount Donated:</strong> $${amount}</p>
+        <p><strong>Transaction Fee:</strong> $${fee}</p>
+        <p><strong>Total Charged:</strong> $${total}</p>
         <p><strong>Type:</strong> ${donation_type}</p>
+        <p><strong>Category:</strong> ${category}</p>
+        ${project ? `<p><strong>Project:</strong> ${project.title}</p>` : ''}
         <p>Your donation helps us support those in need. We appreciate your kindness!</p>
       `;
 
@@ -69,17 +89,23 @@ exports.createDonation = async (req, res) => {
   }
 };
 
-
 exports.getUserDonations = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const donations = await Donation.findAll({ where: { user_id: userId } });
+    const donations = await Donation.findAll({ where: { user_id: req.user.id } });
     res.json(donations);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch donations', error: err.message });
   }
 };
 
+exports.getAllDonations = async (req, res) => {
+  try {
+    const donations = await Donation.findAll();
+    res.json(donations);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch all donations', error: err.message });
+  }
+};
 
 exports.updateImpactMessage = async (req, res) => {
   try {
@@ -93,11 +119,9 @@ exports.updateImpactMessage = async (req, res) => {
     const donation = await Donation.findByPk(donationId);
     if (!donation) return res.status(404).json({ message: 'Donation not found' });
 
-    // Update the impact message
     donation.impact_message = impact_message;
     await donation.save();
 
-    // Fetch the user associated with the donation
     const user = await User.findByPk(donation.user_id);
 
     if (user?.email) {
@@ -118,4 +142,3 @@ exports.updateImpactMessage = async (req, res) => {
     res.status(500).json({ message: 'Failed to update donation', error: err.message });
   }
 };
-

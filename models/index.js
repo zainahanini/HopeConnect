@@ -2,14 +2,13 @@ const db = {};
 const Sequelize = require('sequelize');
 const sequelize = new Sequelize(require('../config/db'));
 
-// Import models
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.User = require('./user.model')(sequelize);
 db.Volunteer = require('./volunteer.model')(sequelize);
 db.Service = require('./service.model')(sequelize);
-
+db.Project=require('./project.model')(sequelize);
 
 db.Volunteer.belongsTo(db.User, {
   foreignKey: 'user_id',

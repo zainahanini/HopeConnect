@@ -12,7 +12,21 @@ const Donation = db.define('Donation', {
   created_at: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
-  }
+  },
+  fee: {
+  type: DataTypes.FLOAT,
+  allowNull: false, 
+},
+total: {
+  type: DataTypes.FLOAT,
+  allowNull: false,
+},
+
+project_id: {
+  type: DataTypes.INTEGER,
+  allowNull: false,
+},
+
 }, {
   timestamps: false
 });
