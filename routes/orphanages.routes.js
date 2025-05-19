@@ -1,0 +1,65 @@
+const express = require('express');
+const router = express.Router();
+const Orphanage = require('../models/orphanage.model');
+const OrphanageReview = require('../models/orphanage_review.model');
+const  isAdmin  = require('../middleware/isAdmin');
+
+// Get all orphanages (optionally only verified)
+router.get('/', async (req, res) => {
+  try {
+    const orphanages = await Orphanage.findAll({
+      where: { verified: true } // remove this if you want all
+    });
+    res.json(orphanages);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Admin route: verify orphanage
+router.patch('/:id/verify', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const orphanage = await Orphanage.findByPk(id);
+    if (!orphanage) return res.status(404).json({ error: 'Orphanage not found' });
+
+    orphanage.verified = true;
+    await orphanage.save();
+
+    res.json({ message: 'Orphanage verified.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Add review to an orphanage
+router.post('/:id/reviews', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, rating, comment } = req.body;
+
+    const review = await OrphanageReview.create({
+      orphanage_id: id,
+      user_id: userId,
+      rating,
+      comment
+    });
+
+    res.status(201).json(review);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get reviews of an orphanage
+router.get('/:id/reviews', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const reviews = await OrphanageReview.findAll({ where: { orphanage_id: id } });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+module.exports = router;
