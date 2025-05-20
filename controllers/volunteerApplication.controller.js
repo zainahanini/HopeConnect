@@ -30,3 +30,26 @@ exports.listApplications = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.updateApplicationStatus = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { status } = req.body;
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status. Use "approved" or "rejected".' });
+    }
+
+    const application = await VolunteerApplication.findByPk(applicationId);
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found.' });
+    }
+
+    application.status = status;
+    await application.save();
+
+    res.json({ message: `Application ${status} successfully.`, application });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
