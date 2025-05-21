@@ -2,7 +2,7 @@
 const { DataTypes } = require('sequelize');
 const db = require('../config/db');
 const User = require('./user.model');
-const Orphan = require('./orphan.model');
+
 
 const Donation = db.define('Donation', {
   amount: DataTypes.FLOAT,
@@ -15,17 +15,30 @@ const Donation = db.define('Donation', {
   },
   fee: {
   type: DataTypes.FLOAT,
-  allowNull: false, 
+  allowNull: true, 
 },
 total: {
   type: DataTypes.FLOAT,
-  allowNull: false,
+  allowNull: true,
 },
 
 project_id: {
   type: DataTypes.INTEGER,
   allowNull: false,
 },
+ donor_lat: {
+   type: DataTypes.DOUBLE },
+  donor_lng: {
+     type: DataTypes.DOUBLE },
+  assigned_agent_id:
+   { type: DataTypes.INTEGER },
+   delivery_distance:{
+    type: DataTypes.STRING
+   },
+   delivery_status: {
+  type: DataTypes.ENUM('pending_pickup', 'en_route', 'delivered'),
+  defaultValue: 'pending_pickup'
+}
 
 }, {
   timestamps: false

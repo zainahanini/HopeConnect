@@ -37,7 +37,7 @@ app.use('/matching', require('./routes/matching.routes'));
 app.use('/betterplace', require('./routes/betterplace.routes'));
 app.use('/orphanages', require('./routes/orphanages.routes'));
 app.use('/reviews', require('./routes/review.routes'));
-
+app.use('/driver',require('./routes/delivery.routes'));
 app.use((req, res, next) => {
   next(createError(404, 'Not Found'));
 });
