@@ -5,37 +5,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const sendEmail = require('../services/sendEmail');
 const axios = require('axios');
 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
-
-async function assignNearestAgent(donorLat, donorLng) {
-  const agents = await DeliveryAgent.findAll({ where: { is_available: true } });
-  if (agents.length === 0) return null;
-
-  const destinations = agents.map(agent => `${agent.current_lat},${agent.current_lng}`).join('|');
-  const origin = `${donorLat},${donorLng}`;
-
-  const response = await axios.get('https://maps.googleapis.com/maps/api/distancematrix/json', {
-    params: {
-      origins: origin,
-      destinations,
-      key: GOOGLE_API_KEY,
-    },
-  });
-
-  const distances = response.data.rows[0].elements;
-  let minIndex = 0;
-  let minDistance = distances[0].distance?.value || Number.MAX_SAFE_INTEGER;
-
-  for (let i = 1; i < distances.length; i++) {
-    if (distances[i].distance?.value < minDistance) {
-      minDistance = distances[i].distance.value;
-      minIndex = i;
-    }
-  }
-
-  return agents[minIndex];
-}
-
+const assignNearestAgent = require('../services/agentAssignment');
 exports.createDonation = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -56,8 +26,8 @@ exports.createDonation = async (req, res) => {
       return res.status(400).json({ message: 'Invalid donation type or category' });
     }
 
-    let fee = 0;
-    let total = amount;
+    let fee = 10;
+    let total = 10;
     let paymentStatus = 'pending';
 
     if (donation_type === 'money') {
@@ -83,20 +53,7 @@ exports.createDonation = async (req, res) => {
       paymentStatus = 'paid';
     }
 
-    let assignedAgentId = null;
-    if (donation_type !== 'money') {
-      if (!donor_lat || !donor_lng) {
-        return res.status(400).json({ message: 'Location is required for physical donations' });
-      }
-
-      const agent = await assignNearestAgent(donor_lat, donor_lng);
-      if (agent) {
-        assignedAgentId = agent.id;
-        agent.is_available = false;
-        await agent.save();
-      }
-    }
-
+    // 1. Create the donation first
     const donation = await Donation.create({
       user_id: userId,
       amount,
@@ -104,13 +61,35 @@ exports.createDonation = async (req, res) => {
       category,
       project_id: project_id || null,
       payment_status: paymentStatus,
-      assigned_agent_id: assignedAgentId,
       donor_lat,
       donor_lng,
-      fee:10,
-      total:10
+      fee,
+      total
     });
 
+    // 2. Assign agent if physical donation
+    if (donation_type !== 'money') {
+      if (!donor_lat || !donor_lng) {
+        return res.status(400).json({ message: 'Location is required for physical donations' });
+      }
+
+      const { agent, distanceText, durationText } = await assignNearestAgent(donor_lat, donor_lng);
+
+      if (!agent) {
+        return res.status(400).json({ message: 'No available agents found' });
+      }
+
+      // 3. Update donation with assignment
+      await donation.update({
+        assigned_agent_id: agent.user_id, // or agent.id, depending on foreign key
+        delivery_distance: distanceText,
+        delivery_status: 'Assigned',
+      });
+
+      await agent.update({ is_available: false });
+    }
+
+    // Send confirmation email
     const user = await User.findByPk(userId);
     if (user?.email) {
       const htmlContent = `
@@ -121,7 +100,6 @@ exports.createDonation = async (req, res) => {
         <p><strong>Type:</strong> ${donation_type}</p>
         ${donation_type !== 'money' ? `<p>Your assigned delivery agent will contact you soon.</p>` : ''}
       `;
-
       await sendEmail(user.email, 'Donation Confirmation', htmlContent);
     }
 
@@ -131,6 +109,8 @@ exports.createDonation = async (req, res) => {
     res.status(500).json({ message: 'Failed to create donation', error: err.message });
   }
 };
+
+
 
 exports.getUserDonations = async (req, res) => {
   try {
@@ -180,3 +160,39 @@ exports.updateImpactMessage = async (req, res) => {
     res.status(500).json({ message: 'Failed to update donation', error: err.message });
   }
 };
+exports.assignNearestAgent = async (req, res) => {
+  const { donationId } = req.params;
+
+  try {
+    const donation = await Donation.findByPk(donationId);
+    if (!donation) return res.status(404).json({ message: 'Donation not found' });
+    if (donation.donation_type === 'money') {
+      return res.status(400).json({ message: 'Money donations don’t require delivery agents' });
+    }
+    if (donation.assigned_agent_id) {
+      return res.status(409).json({ message: 'Agent already assigned to this donation' });
+    }
+
+    const { agent, distanceText, durationText } = await assignNearestAgent(donation.donor_lat, donation.donor_lng);
+    if (!agent) return res.status(400).json({ message: 'No available agents found' });
+
+    await donation.update({
+      assigned_agent_id: agent.id, 
+      delivery_distance: distanceText,
+      delivery_status: 'Assigned',
+    });
+
+    await agent.update({ is_available: false });
+
+    res.status(200).json({
+      message: 'Agent assigned successfully',
+      agentId: agent.user_id || agent.id,
+      distance: distanceText,
+      duration: durationText
+    });
+  } catch (err) {
+    console.error('Agent assignment error:', err);
+    res.status(500).json({ message: 'Failed to assign agent', error: err.message });
+  }
+};
+

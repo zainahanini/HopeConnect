@@ -32,10 +32,16 @@ router.patch('/:id/verify', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-router.post('/:id/reviews', async (req, res) => {
+router.post('/:id/reviews', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
-    const { userId, rating, comment } = req.body;
+    const { rating, comment } = req.body;
+    const userId = req.user.id;
+    const role = req.user.role;
+
+    if (role !== 'sponsor') {
+      return res.status(403).json({ error: 'Only sponsors can submit reviews' });
+    }
 
     const review = await OrphanageReview.create({
       orphanage_id: id,
