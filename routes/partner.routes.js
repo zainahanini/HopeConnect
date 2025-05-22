@@ -10,5 +10,7 @@ router.get('/', PartnerController.getAllPartners);
 router.get('/:id', PartnerController.getPartnerById);
 
 router.put('/:id', authenticateToken, isAdmin, PartnerController.updatePartner);
+router.delete('/:id', authenticateToken, isAdmin, PartnerController.deletePartner);
+
 
 module.exports = router;

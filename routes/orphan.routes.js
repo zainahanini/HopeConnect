@@ -6,5 +6,7 @@ const isAdmin = require('../middleware/isAdmin');
 
 router.post('/', authenticateToken, isAdmin, orphanController.createOrphan);
 router.get('/', authenticateToken, isAdmin, orphanController.getAllOrphans);
+router.put('/:id', authenticateToken, isAdmin, orphanController.updateOrphan);
+router.delete('/:id', authenticateToken, isAdmin, orphanController.deleteOrphan);
 
 module.exports = router;

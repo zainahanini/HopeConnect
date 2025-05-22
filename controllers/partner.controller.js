@@ -33,6 +33,19 @@ class PartnerController {
     }
   }
 
+  static async deletePartner(req, res) {
+  try {
+    const partner = await Partner.findByPk(req.params.id);
+    if (!partner) return res.status(404).json({ error: 'Partner not found' });
+
+    await partner.destroy();
+    res.json({ message: 'Partner deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete partner' });
+  }
+}
+
   static async updatePartner(req, res) {
     try {
       const { name, type, contact_email, website, api_endpoint, description } = req.body;

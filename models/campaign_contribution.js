@@ -10,9 +10,18 @@ const Contribution = sequelize.define('campaign_contribution', {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  type: {
+    type: DataTypes.ENUM('money', 'food', 'clothes', 'services'),
+    allowNull: false,
+    defaultValue: 'money',
+  },
   amount: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
+    allowNull: true, 
+  },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: true,
   },
   contributed_at: {
     type: DataTypes.DATE,
@@ -20,8 +29,8 @@ const Contribution = sequelize.define('campaign_contribution', {
     defaultValue: DataTypes.NOW,
   }
 }, {
-  timestamps: false,        
-  tableName: 'campaign_contributions', 
+  timestamps: false,
+  tableName: 'campaign_contributions',
 });
 
 module.exports = Contribution;

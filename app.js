@@ -35,7 +35,7 @@ app.use('/orphans', orphanRouter);
 app.use('/donations', donationRouter);
 app.use('/news', newsRouter);
 app.use('/sponsorships', sponsorshipRoutes);
-app.use('/api/orphan-updates', orphanUpdatesRouter);
+app.use('/orphan-updates', orphanUpdatesRouter);
 app.use('/donor', donorRoutes);
 app.use('/emergency-campaigns', emergencyCampaignRoutes);
 app.use('/partners', partnerRoutes);
