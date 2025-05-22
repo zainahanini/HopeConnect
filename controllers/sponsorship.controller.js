@@ -45,27 +45,10 @@ exports.updateSponsorship = async (req, res) => {
     const sponsorship = await Sponsorship.findByPk(id);
     if (!sponsorship) return res.status(404).json({ error: 'Sponsorship not found' });
 
-    const wasPending = sponsorship.status === 'pending';
-
     if (status) sponsorship.status = status;
     if (start_date) sponsorship.start_date = start_date;
 
     await sponsorship.save();
-
-    if (wasPending && status === 'active') {
-      const sponsor = await User.findByPk(sponsorship.sponsor_id);
-      const orphan = await Orphan.findByPk(sponsorship.orphan_id);
-
-      if (sponsor?.email) {
-        await sendEmail(
-          sponsor.email,
-          '🎉 Sponsorship Approved!',
-          `<p>Dear ${sponsor.full_name || 'Sponsor'},</p>
-           <p>Your sponsorship for orphan <strong>${orphan?.full_name || 'an orphan'}</strong> has been <strong>approved</strong>.</p>
-           <p>It will begin on <strong>${sponsorship.start_date}</strong>. Thank you for making a difference! </p>`
-        );
-      }
-    }
 
     res.json({ message: 'Sponsorship updated', sponsorship });
   } catch (err) {
@@ -85,5 +68,40 @@ exports.deleteSponsorship = async (req, res) => {
   } catch (err) {
     console.error("Delete error:", err);
     res.status(500).json({ error: 'Delete failed' });
+  }
+};
+
+exports.changeSponsorshipStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const sponsorship = await Sponsorship.findByPk(id);
+    if (!sponsorship) return res.status(404).json({ error: 'Sponsorship not found' });
+
+    const wasPending = sponsorship.status === 'pending';
+
+    sponsorship.status = status;
+    await sponsorship.save();
+
+    if (wasPending && status === 'active') {
+      const sponsor = await User.findByPk(sponsorship.sponsor_id);
+      const orphan = await Orphan.findByPk(sponsorship.orphan_id);
+
+      if (sponsor?.email) {
+        await sendEmail(
+          sponsor.email,
+          '🎉 Sponsorship Approved!',
+          `<p>Dear ${sponsor.full_name || 'Sponsor'},</p>
+           <p>Your sponsorship for orphan <strong>${orphan?.full_name || 'an orphan'}</strong> has been <strong>approved</strong>.</p>
+           <p>It will begin on <strong>${sponsorship.start_date}</strong>. Thank you for making a difference!</p>`
+        );
+      }
+    }
+
+    res.json({ message: 'Sponsorship status updated', sponsorship });
+  } catch (err) {
+    console.error("Status update error:", err);
+    res.status(500).json({ error: 'Failed to update status' });
   }
 };
