@@ -40,7 +40,7 @@ class UserController {
       const validPassword = await bcrypt.compare(password, user.password_hash);
 
       if (!validPassword) {
-        return res.status(401).json({ message: 'Invalid credentials, check again' });
+        return res.status(401).json({ message: 'Invalid credentials, check agai' });
       }
 
       const token = jwt.sign(
