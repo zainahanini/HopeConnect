@@ -9,8 +9,8 @@ const Sponsorship = db.define('Sponsorship', {
     allowNull: false
   },
   status: {
-    type: DataTypes.ENUM('active', 'paused', 'cancelled'),
-    defaultValue: 'active'
+    type: DataTypes.ENUM('pending', 'active', 'paused', 'cancelled'),
+    defaultValue: 'pending' 
   }
 }, {
   timestamps: false,

@@ -1,18 +1,35 @@
 require('dotenv').config();
 
-
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
-
 const db = require('./config/db');
 const sgMail = require('@sendgrid/mail');
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-const app = express();
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/user.routes');
+const orphanRouter = require('./routes/orphan.routes');
+const donationRouter = require('./routes/donation.routes');
+const newsRouter = require('./routes/news.routes');
+const sponsorshipRoutes = require('./routes/sponsorship.routes');
+const orphanUpdatesRouter = require('./routes/orphanUpdates');
+const donorRoutes = require('./routes/donor');
+const emergencyCampaignRoutes = require('./routes/emergencyCampaign.routes');
+const partnerRoutes = require('./routes/partner.routes');
+const messageRouter = require('./routes/message.routes');
+const volunteerRoutes = require('./routes/volunteer.routes');
+const volunteerApplicationRoutes = require('./routes/volunteerApplication.routes');
+const volunteerRequestRoutes = require('./routes/volunteerRequest.routes');
+const matchingRoutes = require('./routes/matching.routes');
+const betterplaceRoutes = require('./routes/betterplace.routes');
+const orphanagesRoutes = require('./routes/orphanages.routes');
+const reviewRoutes = require('./routes/review.routes');
+const deliveryRoutes = require('./routes/delivery.routes');
 
+const app = express();
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -21,23 +38,27 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+app.use('/orphans', orphanRouter);
+app.use('/donations', donationRouter);
+app.use('/news', newsRouter);
+app.use('/sponsorships', sponsorshipRoutes);
+app.use('/api/orphan-updates', orphanUpdatesRouter);
+app.use('/donor', donorRoutes);
+app.use('/emergency-campaigns', emergencyCampaignRoutes);
+app.use('/partners', partnerRoutes);
+app.use('/messages', messageRouter);
+app.use('/volunteers', volunteerRoutes);
+app.use('/volunteer-applications', volunteerApplicationRoutes);
+app.use('/volunteer-requests', volunteerRequestRoutes);
+app.use('/matching', matchingRoutes);
+app.use('/betterplace', betterplaceRoutes);
+app.use('/orphanages', orphanagesRoutes);
+app.use('/reviews', reviewRoutes);
+app.use('/driver', deliveryRoutes);
 
-app.use('/', require('./routes/index'));
-app.use('/users', require('./routes/user.routes'));
-app.use('/orphans', require('./routes/orphan.routes'));
-app.use('/donations', require('./routes/donation.routes'));
-app.use('/news', require('./routes/news.routes'));
-app.use('/sponsorships', require('./routes/sponsorship.routes'));
-app.use('/api/orphan-updates', require('./routes/orphanUpdates'));
-app.use('/donor', require('./routes/donor'));
-app.use('/volunteers', require('./routes/volunteer.routes'));
-app.use('/volunteer-applications', require('./routes/volunteerApplication.routes'));
-app.use('/volunteer-requests', require('./routes/volunteerRequest.routes'));
-app.use('/matching', require('./routes/matching.routes'));
-app.use('/betterplace', require('./routes/betterplace.routes'));
-app.use('/orphanages', require('./routes/orphanages.routes'));
-app.use('/reviews', require('./routes/review.routes'));
-app.use('/driver',require('./routes/delivery.routes'));
+
 app.use((req, res, next) => {
   next(createError(404, 'Not Found'));
 });
