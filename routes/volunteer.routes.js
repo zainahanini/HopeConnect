@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const volunteerController = require('../controllers/volunteer.controller');
+const controller = require('../controllers/volunteer.controller');
+const authenticate = require('../middleware/authenticateToken');
 
-router.post('/', volunteerController.registerVolunteer);
-router.get('/', volunteerController.getAllVolunteers);
+router.post('/', authenticate, controller.createVolunteer);
 
 module.exports = router;
+
